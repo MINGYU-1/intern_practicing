@@ -1,7 +1,7 @@
 # Conditional Variational Autoencoder (CVAE) Project
 
-본 프로젝트는 **촉매 조성 데이터**를 기반으로 한 **Conditional Variational Autoencoder (CVAE)** 구현 및 학습 파이프라인을 정리한 것이다.
-금속 조성(metal)을 생성 대상 변수 `x`로 두고, 반응 조건(reaction) 등을 조건 변수 `c`로 사용하여 **조건부 생성 모델**을 구축한다.
+본 프로젝트는 **촉매 조성 데이터**를 기반으로 한 **Conditional Variational Autoencoder (CVAE)** 구현 및 학습 파이프라인을 정리
+금속 조성(metal)을 생성 대상 변수 `x`로 두고, 반응 조건(reaction) 등을 조건 변수 `c`로 사용하여 **조건부 생성 모델**을 생성
 
 ![alt text](image.png)
 ---
@@ -46,13 +46,13 @@
 python 1_12_data_save.py
 ```
 
-실행 결과로 `data/` 폴더에 `*.npy` 파일이 생성된다.
+실행 결과로 `data/` 폴더에 `*.npy` 파일 생성
 
 ---
 
-## 3. 데이터 분할 (Shuffle 없음)
+## 3. 데이터 분할 (No Shuffle)
 
-본 프로젝트에서는 **데이터 순서에 의미가 있을 수 있다고 가정**하여 sklearn 분할 시 셔플을 사용하지 않는다.
+본 프로젝트에서는 **데이터 순서에 의미가 있을 수 있다고 가정**하여 sklearn 분할 시 셔플을 사용X
 
 ```python
 from sklearn.model_selection import train_test_split
@@ -67,7 +67,7 @@ x_val, x_test, c_val, c_test = train_test_split(
 )
 ```
 
-이후 PyTorch Tensor로 변환한다.
+이후 PyTorch Tensor로 변환
 
 ---
 
@@ -169,5 +169,5 @@ class EarlyStopping:
 
 ## 10. 요약
 
-본 프로젝트는 **조건부 생성 모델(CVAE)** 을 촉매 조성 데이터에 적용하기 위한 기본적이고 정석적인 구현이다.
-데이터 분할, loss 스케일, validation 관리 등 **실험 재현성과 해석 가능성**을 중시하는 구조를 따른다.
+본 프로젝트는 **조건부 생성 모델(CVAE)** 을 촉매 조성 데이터에 적용하기 위한 기본적이고 정석적인 구현
+데이터 분할, loss 스케일, validation 관리 등 **실험 재현성과 해석 가능성**을 중시하는 구조
