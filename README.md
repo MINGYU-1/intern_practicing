@@ -1,6 +1,7 @@
 # Conditional Variational Autoencoder (CVAE) Project
 
-본 프로젝트는 **촉매 조성 데이터**를 기반으로 한 **Conditional Variational Autoencoder (CVAE)** 구현 및 학습 파이프라인을 정리
+본 프로젝트는 **촉매 조성 데이터**를 기반으로 한 **Conditional Variational Autoencoder (CVAE)** 
+구현 및 학습 파이프라인을 정리<br>
 금속 조성(metal)을 생성 대상 변수 `x`로 두고, 반응 조건(reaction) 등을 조건 변수 `c`로 사용하여 **조건부 생성 모델**을 생성
 
 ![alt text](image.png)
