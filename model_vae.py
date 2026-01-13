@@ -67,8 +67,6 @@ def cvae_loss_each(x_hat,x,mu,logvar,beta = 0.01):
         kls.append(kl)
     return losses,recons,kls
 def cvae_loss_optimized(x_hat, x, mu, logvar, beta=0.01):
-    # 1. 모든 피처의 Reconstruction Loss를 한 번에 계산 (reduction='none')
-    # 결과 크기: [Batch_size, Feature_size]
     recon_each_feature = F.mse_loss(x_hat, x, reduction='none').mean(dim=0)
     
     # 2. KL Divergence 계산
