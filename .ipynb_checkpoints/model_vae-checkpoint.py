@@ -53,28 +53,3 @@ def cvae_loss(x_hat, x, mu, logvar, beta=1.0):
 
     loss = recon + beta * kl
     return loss, recon, kl
-def cvae_loss_each(x_hat,x,mu,logvar,beta = 0.01):
-    losses=[]
-    recons=[]
-    kls = []
-    kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
-    kl = kl.mean()
-    for i in range(x_hat.shape[1]):
-        recon = F.mse_loss(x_hat[:,i],x[:,i])
-        loss = recon+beta*kl
-        losses.append(loss)
-        recons.append(recon)
-        kls.append(kl)
-    return losses,recons,kls
-def cvae_loss_optimized(x_hat, x, mu, logvar, beta=0.01):
-    # 1. 모든 피처의 Reconstruction Loss를 한 번에 계산 (reduction='none')
-    # 결과 크기: [Batch_size, Feature_size]
-    recon_each_feature = F.mse_loss(x_hat, x, reduction='none').mean(dim=0)
-    
-    # 2. KL Divergence 계산
-    kl = -0.5 * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1))
-    
-    # 3. 각 피처별 최종 Loss 리스트 생성
-    losses = [r + beta * kl for r in recon_each_feature]
-    
-    return losses, recon_each_feature.tolist(), [kl.item()] * len(losses)
