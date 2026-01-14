@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class CVAE(nn.Module):
-    def __init__(self,x_dim,c_dim,z_dim,h1 = 128,h2 =256):
+    def __init__(self,x_dim,c_dim,z_dim=16,h1 = 32,h2 =64):
         super().__init__()
         self.x_dim = x_dim
         self.c_dim = c_dim
@@ -15,9 +15,9 @@ class CVAE(nn.Module):
         self.mu = nn.Linear(h2,z_dim)
         self.logvar = nn.Linear(h2,z_dim)
         # decoder
-        self.dec1 = nn.Linear(z_dim+c_dim,h1)
-        self.dec2 = nn.Linear(h1,h2)
-        self.out = nn.Linear(h2,x_dim)
+        self.dec1 = nn.Linear(z_dim+c_dim,h2) # 16+9 ,64
+        self.dec2 = nn.Linear(h2,h1) # 64,32
+        self.out = nn.Linear(h1,x_dim) # 32 23
     def encoder(self,x,c):
         h = torch.cat([x,c],dim = 1)
         h = F.relu(self.enc1(h))
@@ -29,13 +29,13 @@ class CVAE(nn.Module):
     def reparameterize(self,mu,logvar):
         std = torch.exp(0.5*logvar)
         eps = torch.randn_like(std)
-        return mu +std*eps
+        return mu + std * eps
         # decoder
     def decoder(self,z,c):
         h = torch.cat([z,c],dim = 1)
         h = F.relu(self.dec1(h))
         h = F.relu(self.dec2(h))
-        x_hat = self.out(h)
+        x_hat = torch.sigmoid(self.out(h))
         return x_hat
     def forward(self,x,c):
         mu,logvar = self.encoder(x,c)
