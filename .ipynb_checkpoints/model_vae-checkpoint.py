@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class CVAE(nn.Module):
-    def __init__(self,x_dim,c_dim,z_dim=16,h1 = 32,h2 =64):
+    def __init__(self,x_dim,c_dim,z_dim=16,h1 = 64,h2 =128):
         super().__init__()
         self.x_dim = x_dim
         self.c_dim = c_dim
