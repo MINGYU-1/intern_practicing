@@ -43,15 +43,52 @@ class CVAE(nn.Module):
         x_hat = self.decoder(z,c)
         return x_hat,mu,logvar
         
-def cvae_loss(x_hat, x, mu, logvar, beta=1.0):
-    # recon: 배치 평균 MSE
-    recon = F.mse_loss(x_hat, x)
+def cvae_loss(x_hat, x, mu, logvar, beta=1.0, nickel_idx=7, nickel_weight=1.0,
+              logvar_clip=(-10.0, 10.0)):
+    """
+    recon1: 전체 MSE (다 포함)
+    recon2: 니켈 제외 MSE
+    recon3: 니켈함량(수정방식) = recon2 + nickel_weight * recon4
+            (즉, 니켈 제외 + 니켈을 명시적으로 가중합)
+    recon4: 니켈만 MSE
+    """
 
-    # KL: 배치 평균
-    kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
+    # ---- 안전성 체크 ----
+    if x_hat.shape != x.shape:
+        raise ValueError(f"x_hat shape {x_hat.shape} != x shape {x.shape}")
+    if mu.shape != logvar.shape:
+        raise ValueError(f"mu shape {mu.shape} != logvar shape {logvar.shape}")
+
+    B, D = x.shape
+    device = x.device
+
+    # 니켈 제외 인덱스
+    other_idx = torch.tensor([i for i in range(D) if i != nickel_idx],
+                             device=device, dtype=torch.long)
+
+    # ---- recon ----
+    recon1 = F.mse_loss(x_hat, x, reduction="mean")  # 다 포함
+
+    x_hat_others = x_hat.index_select(1, other_idx)
+    x_others     = x.index_select(1, other_idx)
+    recon2 = F.mse_loss(x_hat_others, x_others, reduction="mean")  # 니켈 제외
+
+    recon4 = F.mse_loss(x_hat[:, nickel_idx], x[:, nickel_idx], reduction="mean")  # 니켈만
+
+    # 니켈함량(수정방식): 교차항 없이 명시적 가중합
+    recon3 = recon2 + nickel_weight * recon4
+
+    # ---- KL ----
+    if logvar_clip is not None:
+        logvar = logvar.clamp(*logvar_clip)
+
+    kl = -0.5 * torch.sum(1.0 + logvar - mu.pow(2) - logvar.exp(), dim=1)
     kl = kl.mean()
 
-    loss = recon + beta * kl
-    return loss, recon, kl
+    # ---- total loss ----
+    loss1 = recon1 + beta * kl
+    loss2 = recon2 + beta * kl
+    loss3 = recon3 + beta * kl
+    loss4 = recon4 + beta * kl
 
-    return losses, recon_each_feature.tolist(), [kl.item()] * len(losses)
+    return loss1, loss2, loss3, loss4, recon1, recon2, recon3, recon4, kl
