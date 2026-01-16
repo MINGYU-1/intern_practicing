@@ -35,7 +35,7 @@ class CVAE(nn.Module):
         h = torch.cat([z,c],dim = 1)
         h = F.relu(self.dec1(h))
         h = F.relu(self.dec2(h))
-        x_hat = torch.sigmoid(self.out(h))
+        x_hat = F.sigmoid(self.out(h))
         return x_hat
     def forward(self,x,c):
         mu,logvar = self.encoder(x,c)
