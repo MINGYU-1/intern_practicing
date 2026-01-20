@@ -43,15 +43,14 @@ class CVAE(nn.Module):
         x_hat = self.decoder(z,c)
         return x_hat,mu,logvar
 
-def categorical_loss(x_hat, x,mu, ):
-    
-def cvae_loss(x_hat, x, mu, logvar, beta=0.01,nickel_weight=0.5):
+
+def cvae_loss(x_hat, x, mu, logvar, beta=1.0,nickel_weight=0.8):
     # recon: 배치 평균 MSE
     idx = list(range(0, 7)) + list(range(8, 23)) 
     recon1 = F.mse_loss(x_hat,x,reduction='mean') # 다 포함
     recon2 = F.mse_loss(x_hat[:,idx],x[:,idx],reduction='mean') # 니켈만 삭제
     recon4 = F.mse_loss(x_hat[:,7:8],x[:,7:8],reduction='mean') # nickle의 항목 
-    recon3 = (1-nickel_weight)*recon2+nickel_weight*recon4 #가중합에 대해서 구할때 소수로 해서 구한다.
+    recon3 = (1-nickel_weight)*recon2+(nickel_weight)*recon4 # 가중합 합이 두자리이상
    
     
     # KL: 배치 평균
@@ -60,9 +59,8 @@ def cvae_loss(x_hat, x, mu, logvar, beta=0.01,nickel_weight=0.5):
 
     loss1 = recon1 + beta * kl
     loss2 = recon2 + beta * kl
-    loss3 = recon3 + beta * kl
-    loss4 = recon4 + beta * kl
+    loss3 = recon3 + beta *kl
+    loss4 = recon4 + beta* kl
     return loss1, loss2, loss3, loss4, recon1,recon2, recon3,recon4, kl
 
-class CVAE2(nn.Module):
     
