@@ -15,16 +15,10 @@ class AdvancedMultiHurdleCVAE(nn.Module):
         self.mu = nn.Linear(h2_dim, z_dim)
         self.logvar = nn.Linear(h2_dim, z_dim)
 
-        # --- Decoder ---
+        # --- Decoder1 ---
         self.dec_fc1 = nn.Linear(z_dim + c_dim, h2_dim)
         self.dec_fc2 = nn.Linear(h2_dim, h1_dim)
-
-        self.res_block = nn.Sequential(
-            nn.Linear(h1_dim, h1_dim),
-            nn.ReLU(),
-            nn.Linear(h1_dim, h1_dim)
-        )
-
+        
         # Multi-class Classification Head: (Batch, x_dim * num_classes)
         self.class_logits = nn.Linear(h1_dim, x_dim * num_classes)
         
@@ -60,13 +54,7 @@ class AdvancedMultiHurdleCVAE(nn.Module):
         logits, mu_val = self.decode(z, c)
         return logits, mu_val, mu_z, logvar_z
 def multi_hurdle_loss(logits, mu_val, x, target_classes, mu_z, logvar_z, beta=1.0):
-    """
-    Args:
-        logits: (B, x_dim, num_classes) - 분류 예측
-        mu_val: (B, x_dim) - 수치 예측
-        x: (B, x_dim) - 실제 수치 target
-        target_classes: (B, x_dim) - 실제 클래스 target (0, 1, 2...)
-    """
+    
     B, x_dim, num_classes = logits.shape
 
     # 1) Classification Loss (CCE)
