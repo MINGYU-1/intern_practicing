@@ -28,9 +28,9 @@ class MultiDecoderCondVAE(nn.Module):
             nn.Linear(h2, x_dim),
         )
 
-        # Decoder 2 (numeric): [z, c] -> recon_numeric (x_dim)
+        # Decoder 2 (numeric): [z, c, prob_mask] -> recon_numeric (x_dim)
         self.decoder_mse = nn.Sequential(
-            nn.Linear(z_dim + c_dim, 128),
+            nn.Linear(z_dim + c_dim + x_dim, 128),
             nn.ReLU(),
             nn.Linear(128,x_dim)
         )
@@ -47,15 +47,17 @@ class MultiDecoderCondVAE(nn.Module):
         
         mask_logits = self.decoder_bce(torch.cat([z, c], dim=1))
         prob_mask = torch.sigmoid(mask_logits)
-        recon_numeric = self.decoder_mse(torch.cat([z, c], dim=1))
+        criterion = nn.BCELoss()
+        loss_bce = criterion(prob_mask,target_mask)
+        recon_numeric = self.decoder_mse(torch.cat([z, c, prob_mask], dim=1))
 
-        return mask_logits, recon_numeric, z_mu, z_logvar
+        return binary_mask, recon_numeric, z_mu, z_logvar
 
-def integrated_loss_fn(mask_logits, recon_numeric, target_x, mu, logvar, beta=1.0):
+def integrated_loss_fn(prob_mask, recon_numeric, target_x, mu, logvar, beta=1.0):
 
-    target_mask = (target_x > 1e-8).float() # target_x의 값이 미소한 1e-8보다 크게 채택하여 
-     ##**with_logits_사용이유**: target_mask로 해서 수행하기 위해서 
-    bce_loss = F.binary_cross_entropy_with_logits(mask_logits, target_mask, reduction='sum') #확실하게 0,1로 구분
+    target_mask = (target_x > 1e-8).float() # target_x의 값이 미소한 1e-6보다 크게 채택하여 
+    ##**with_logits_사용이유**: target_mask로 해서 수행하기 위해서 
+    bce_loss = F.binary_cross_entropy(prob_mask, target_mask ) #확실하게 0,1로 구분
  
     # 실제 값이 존재하는 영역만 MSE 계산
     mse_elements = (recon_numeric - target_x) ** 2
@@ -67,11 +69,12 @@ def integrated_loss_fn(mask_logits, recon_numeric, target_x, mu, logvar, beta=1.
     # 스케일 조정을 위해 배치 사이즈로 나누는 것이 안정적입니다.
     batch_size = target_x.size(0)
 
-    total_loss = (bce_loss  + beta * kl_loss) / batch_size
+    total_loss = (bce_loss + masked_mse_loss  + beta * kl_loss) / batch_size
 
     
     return {
         'loss': total_loss,
         'bce': bce_loss / batch_size,
+        'mse': masked_mse_loss / batch_size,
         'kl': kl_loss / batch_size
     }
