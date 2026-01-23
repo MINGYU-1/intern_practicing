@@ -21,7 +21,7 @@ final_best_history = None  # 가장 성적이 좋은 시드의 학습 기록 저
 final_best_seed = None
 
 # 10번의 무작위 시드 실험 시작
-seeds = np.random.randint(1, 1000, size=100)
+seeds = np.random.randint(1, 1000, size=5)
 
 for n in seeds:
     print(f"\n>>> Experiment with Seed: {n} starts.")
@@ -128,3 +128,14 @@ plt.tight_layout()
 plt.show()
 
 print(f"\n최적 시드: {final_best_seed} | 최저 손실: {best_val_so_far:.6f}")
+
+import pickle
+from pathlib import Path
+
+save_dir = Path("./debug_results")
+save_dir.mkdir(exist_ok=True)
+
+with open(save_dir / f"worst_history_seed_{worst_seed}.pkl", "wb") as f:
+    pickle.dump(worst_history, f)
+
+print(f"worst_history 저장 완료: seed={worst_seed}")

@@ -167,3 +167,14 @@ plt.tight_layout()
 plt.show()
 
 print(f"\n[실험 종료] 최적 시드: {final_best_seed} | 최저 검증 손실: {best_val_so_far:.6f}")
+
+import pickle
+from pathlib import Path
+
+save_dir = Path("./debug_results")
+save_dir.mkdir(exist_ok=True)
+
+with open(save_dir / f"worst_history_seed_{worst_seed}.pkl", "wb") as f:
+    pickle.dump(worst_history, f)
+
+print(f"worst_history 저장 완료: seed={worst_seed}")
